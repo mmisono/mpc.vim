@@ -23,6 +23,10 @@ if !exists('g:mpc_format')
     let g:mpc_format = '"[[%artist% : %album% - ]%title%]|[%file%]"'
 endif
 
+if !exists('g:mpc_lyrics_use_cache')
+    let g:mpc_lyrics_use_cache = 1
+endif
+
 function! Mpc(arg)
     return system(g:mpc_command." -f ".g:mpc_format." -p ".g:mpc_port.
                 \" -h ".g:mpc_host." ".a:arg)
@@ -125,6 +129,24 @@ endfunction
 
 
 function! Fetch_lyrics(artist,title)
+    let artist =  substitute(a:artist," ","_","g")
+    let title  =  substitute(a:title," ","_","g")
+    let name = "Lyrics:".artist."-".title
+
+    if g:mpc_lyrics_use_cache
+        let bufnr = bufnr(name)
+        if bufnr != -1
+            let winnr = bufwinnr(bufnr)
+            if winnr != -1
+                exe "normal \<c-w>".winnr."w"
+            else
+               silent top split
+               exe "buffer ".bufnr
+            endif
+            return
+        endif
+    endif
+
     while 1
         let lyrics = s:fetch_lyrics_from_lyricswiki(a:artist,a:title)
         if lyrics != [] | break | endif
@@ -135,16 +157,16 @@ function! Fetch_lyrics(artist,title)
 
     if lyrics == []
         echo "not found"
-		return
+        return
     endif
 
-    let artist =  substitute(a:artist," ","_","g")
-    let title  =  substitute(a:title," ","_","g")
-    exe "silent top split Lyrics:".artist."-".title
+    exe "silent top split ".name
     call append(0,lyrics)
     call append(0,[a:artist." - ".a:title,""])
     setl nomodified
-    setl bufhidden=delete
+    if g:mpc_lyrics_use_cache == 0
+        setl bufhidden=delete
+    endif
     normal gg
 endfunction
 
