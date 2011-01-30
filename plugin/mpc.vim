@@ -60,15 +60,14 @@ function! s:mpc_cunnret()
 endfunction
 
 "fetch lyrics from lyrics.wikia.com
-function! Fetch_lyrics(artist,title)
-    let artist =  substitute(a:artist," ","+","g")
-    let title  =  substitute(a:title," ","+","g")
+function! s:fetch_lyrics_from_lyricswiki(artist,title)
+    let artist =  http#encodeURI(a:artist)
+    let title  =  http#encodeURI(a:title)
     let url = "http://lyrics.wikia.com/api.php?action=lyrics&fmt=xml&".
                 \"func=getSong&artist=".artist."&song=".title
     let r = system('curl "'.url.'"')
     if r =~ "<lyrics>Not found</lyrics>"
-        echo "lyrics not found"
-        return 
+        return []
     endif
     let start = stridx(r,"<url>")
     let end   = stridx(r,"</url>")
@@ -80,6 +79,64 @@ function! Fetch_lyrics(artist,title)
     let lyrics =  split(html#decodeEntityReference(
                 \r[start+16 : end-1]),'<br />')
 
+    return lyrics
+endfunction
+
+" fetch lyrics from utamap
+function! s:fetch_lyrics_from_utamap(artist,title)
+    let id = s:get_lyrics_id(a:artist,a:title)
+    if id == -1
+        return []
+    endif
+
+    let url = "http://www.utamap.com/phpflash/flashfalsephp.php?unum=".id
+    let lyrics = split(system('curl "'.url.'"'),"\n")[3:]
+    let lyrics[0] = substitute(lyrics[0],"test1=\\d\\+&test2=","","g")
+    return lyrics
+endfunction
+
+function! s:get_lyrics_id(artist,title)
+    let cnt=0
+    let artist = http#encodeURI(iconv(a:artist,&encoding,"utf-8"))
+    let title = iconv(a:title,&encoding,"utf-8")
+    while 1
+        let url = "http://www.utamap.com/searchkasi.php?searchname=artist"
+                \."&act=search&sortname=1&pattern=3"
+                \."&word=".artist
+                \."&page=".cnt
+        let html = split(system('curl "'.url.'"'),"\n")
+        let match = 0
+        for line in html
+            let id = matchstr(line,"showkasi.php?surl=\\zs.\\+\\ze\">")
+            let title_ = matchstr(line,"showkasi.php?surl=.\\+\">\\zs.\\+\\ze</A>") 
+            let title_ = iconv(title_,"sjis","utf-8")
+            if id != ''
+                let match = 1
+                if title == title_
+                    return id
+                endif
+            endif
+        endfor
+        if !match | break| endif
+        let cnt += 1
+    endwhile
+    return -1
+endfunction
+
+
+function! Fetch_lyrics(artist,title)
+    while 1
+        let lyrics = s:fetch_lyrics_from_lyricswiki(a:artist,a:title)
+        if lyrics != [] | break | endif
+        let lyrics = s:fetch_lyrics_from_utamap(a:artist,a:title)
+        if lyrics != [] | break | endif
+        break
+    endwhile
+
+    if lyrics == []
+        echo "not found"
+		return
+    endif
 
     let artist =  substitute(a:artist," ","_","g")
     let title  =  substitute(a:title," ","_","g")
@@ -157,4 +214,4 @@ command! -nargs=0 MpcToggle     call Mpc("toggle")
 
 "------------------------------
 let &cpo = s:save_cpo
-	unlet s:save_cpo
+unlet s:save_cpo
