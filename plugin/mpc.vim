@@ -188,12 +188,12 @@ if !exists('g:mpc_no_map_default') || !g:mpc_no_map_default
     nnoremap <Leader>mm  :MpcStatus<CR>
     nnoremap <Leader>mL  :MpcCurrentMusicLyrics<CR>
     if exists("*unite#start")
-        nnoremap <Leader>ml  :Unite mpc<CR>
-        nnoremap <Leader>mp  :Unite mpc:playlist<CR>
+        nnoremap <Leader>ml  :Unite mpc -buffer-name=music<CR>
+        nnoremap <Leader>mp  :Unite mpc:playlist -buffer-name=playlist<CR>
         nnoremap <Leader>mu  :Unite mpc
     endif
     if exists("*submode#map")
-        call submode#enter_with('mpc/seek', 'n', '', '<leader>ms', '<Nop>')
+        call submode#enter_with('mpc/seek', 'n', '', '<leader>ms', ':MpcCurrent<CR>')
         call submode#leave_with('mpc/seek', 'n', '', '<Esc>')
         call submode#map ('mpc/seek', 'n', '', '-', ':Mpc seek -1<CR> :MpcCurrent<CR>')
         call submode#map ('mpc/seek', 'n', '', 'h', ':Mpc seek -1<CR> :MpcCurrent<CR>')
