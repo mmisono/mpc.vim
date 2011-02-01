@@ -147,13 +147,16 @@ function! Fetch_lyrics(artist,title)
         endif
     endif
 
-    while 1
-        let lyrics = s:fetch_lyrics_from_lyricswiki(a:artist,a:title)
+    let lyrics_func = [
+                        \"fetch_lyrics_from_lyricswiki",
+                        \"fetch_lyrics_from_utamap",
+                      \]
+
+    for func in lyrics_func
+        let lyrics = s:{func}(a:artist,a:title)
         if lyrics != [] | break | endif
-        let lyrics = s:fetch_lyrics_from_utamap(a:artist,a:title)
-        if lyrics != [] | break | endif
-        break
-    endwhile
+    endfor
+
 
     if lyrics == []
         echo "not found"
