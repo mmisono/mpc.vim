@@ -11,11 +11,11 @@ if !exists('g:mpc_command')
     let g:mpc_command = "mpc"
 endif
 
-if !exists('g:mpc_host')
+if !exists('g:mpd_host')
     let g:mpc_host= "localhost"
 endif
 
-if !exists('g:mpc_port')
+if !exists('g:mpd_port')
     let g:mpc_port= "6600"
 endif
 
