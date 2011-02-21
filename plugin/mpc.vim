@@ -12,11 +12,11 @@ if !exists('g:mpc_command')
 endif
 
 if !exists('g:mpd_host')
-    let g:mpc_host= "localhost"
+    let g:mpd_host= "localhost"
 endif
 
 if !exists('g:mpd_port')
-    let g:mpc_port= "6600"
+    let g:mpd_port= "6600"
 endif
 
 if !exists('g:mpc_format')
@@ -28,8 +28,8 @@ if !exists('g:mpc_lyrics_use_cache')
 endif
 
 function! Mpc(arg)
-    return system(g:mpc_command." -f ".g:mpc_format." -p ".g:mpc_port.
-                \" -h ".g:mpc_host." ".a:arg)
+    return system(g:mpc_command." -f ".g:mpc_format." -p ".g:mpd_port.
+                \" -h ".g:mpd_host." ".a:arg)
 endfunction
 
 function! s:mpc_save(name)
